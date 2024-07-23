@@ -1,0 +1,2 @@
+function e(a,t){return{description:"Experienced software engineer specializing in user-centric application development and AI-driven backend infrastructure. Track record of creating customer-facing applications that drive engagement. I designed scalable systems to support advanced AI tasks.",favicon:"https://framerusercontent.com/assets/eVTjd4i7OQQ9C0ht13t6fN1Euo.png",robots:"max-image-preview:large",title:"Solomon Wakhungu"}}export{e as a};
+//# sourceMappingURL=chunk-VCCWCNI4.mjs.map
