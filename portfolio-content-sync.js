@@ -17,6 +17,17 @@
     [...navigationRoutes.values()].map((route) => `/${route}`),
   );
 
+  function caseStudiesHeroArrow(anchor) {
+    if (anchor?.getAttribute("data-framer-name") !== "Arrow Button") return false;
+    const card = anchor.closest('[data-framer-name="Card"]');
+    const label = [...(card?.querySelectorAll("p") || [])]
+      .map((paragraph) => paragraph.textContent.trim())
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return label === "READ ENGINEERING CASE STUDIES";
+  }
+
   // BEGIN GENERATED PROJECT CATALOG
   const projects = [
     {
@@ -366,11 +377,14 @@
         anchor.target = "_blank";
         anchor.rel = "noopener";
       }
-      if (value === "READ ENGINEERING CASE STUDIES") {
-        anchor.href = "case-studies.html";
-        anchor.removeAttribute("target");
-        anchor.removeAttribute("rel");
-      }
+    });
+
+    document.querySelectorAll('[data-framer-name="Card"]').forEach((card) => {
+      const anchor = card.querySelector('a[data-framer-name="Arrow Button"]');
+      if (!caseStudiesHeroArrow(anchor)) return;
+      anchor.href = "case-studies.html";
+      anchor.removeAttribute("target");
+      anchor.removeAttribute("rel");
     });
 
     legacyCards.forEach((card) => {
