@@ -1,0 +1,106 @@
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.framer-108jl35-container {
+  display: none !important;
+}
+
+.portfolio-contact-anchor {
+  display: block;
+  scroll-margin-top: 32px;
+}
+
+@media (max-width: 600px) {
+
+  .portfolio-profile-card {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 350px !important;
+  }
+
+  .portfolio-profile-card [data-framer-name="Bio"],
+  .portfolio-profile-card [data-framer-name="Description & icons"],
+  .portfolio-profile-card [data-framer-component-type="RichTextContainer"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .portfolio-profile-name {
+    font-size: 30px !important;
+    line-height: 1.08 !important;
+    white-space: normal !important;
+  }
+
+  .portfolio-profile-description {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 17px !important;
+    line-height: 1.2 !important;
+  }
+
+  .portfolio-right-column {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 350px !important;
+    align-self: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .portfolio-hero {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 350px !important;
+  }
+
+  .portfolio-hero [data-framer-name="Info"],
+  .portfolio-hero [data-framer-component-type="RichTextContainer"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .portfolio-hero-title,
+  .portfolio-hero-title * {
+    font-size: clamp(40px, 14vw, 56px) !important;
+    line-height: 0.98 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .portfolio-hero-intro {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    line-height: 1.55 !important;
+  }
+
+  .portfolio-stat-group {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .portfolio-stat-group > * {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  .portfolio-stat-group p:first-child {
+    font-size: clamp(32px, 10vw, 42px) !important;
+  }
+
+  .portfolio-stat-group p:not(:first-child) {
+    font-size: 12px !important;
+    overflow-wrap: anywhere !important;
+  }
+}

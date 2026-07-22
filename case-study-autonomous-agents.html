@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Overnight Autonomous Engineering System | Solomon Wakhungu</title>
+  <meta name="description" content="How an overnight engineering queue routes work between a local model and paid coding agents, verifies outputs, and reconciles task status.">
+  <meta name="author" content="Solomon Wakhungu">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="theme-color" content="#151312">
+  <link rel="canonical" href="https://solomonwakhungu.vercel.app/case-study-autonomous-agents.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="portfolio-content.css?v=20260721-3">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Solomon Wakhungu">
+  <meta property="og:title" content="Overnight Autonomous Engineering System | Solomon Wakhungu">
+  <meta property="og:description" content="How an overnight engineering queue routes work between a local model and paid coding agents, verifies outputs, and reconciles task status.">
+  <meta property="og:url" content="https://solomonwakhungu.vercel.app/case-study-autonomous-agents.html">
+  <meta property="og:image" content="https://solomonwakhungu.vercel.app/images/case-studies-project.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Overnight Autonomous Engineering System | Solomon Wakhungu">
+  <meta name="twitter:description" content="How an overnight engineering queue routes work between a local model and paid coding agents, verifies outputs, and reconciles task status.">
+  <meta name="twitter:image" content="https://solomonwakhungu.vercel.app/images/case-studies-project.svg">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"An Overnight Autonomous Engineering System","description":"How an overnight engineering queue routes work between a local model and paid coding agents, verifies outputs, and reconciles task status.","url":"https://solomonwakhungu.vercel.app/case-study-autonomous-agents.html","mainEntityOfPage":"https://solomonwakhungu.vercel.app/case-study-autonomous-agents.html","isPartOf":{"@type":"CollectionPage","url":"https://solomonwakhungu.vercel.app/case-studies.html"},"author":{"@type":"Person","name":"Solomon Wakhungu","url":"https://solomonwakhungu.vercel.app/"},"keywords":["Linear","LM Studio","Qwen","Codex CLI","Claude Code"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://solomonwakhungu.vercel.app/"},{"@type":"ListItem","position":2,"name":"Case Studies","item":"https://solomonwakhungu.vercel.app/case-studies.html"},{"@type":"ListItem","position":3,"name":"An Overnight Autonomous Engineering System","item":"https://solomonwakhungu.vercel.app/case-study-autonomous-agents.html"}]}]}</script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<nav class="site-nav" aria-label="Primary"><div class="site-nav__pill"><a href="index.html">Home</a><a href="experience.html">Experience</a><a href="projects.html" aria-current="page">Projects</a><a href="tools.html">Tools</a></div></nav>
+<main class="page-shell" id="content">
+<aside class="profile-card" aria-label="Solomon Wakhungu profile">
+  <h2>SOLOMON<br>WAKHUNGU</h2>
+  <p>Senior Software Engineer building reliable cloud platforms, Kubernetes systems, and AI infrastructure.</p>
+  <div class="profile-links"><a href="case-studies.html">All studies</a><a href="https://www.linkedin.com/in/solomon-wakhungu-2712791bb/">LinkedIn</a><a href="Solomon-Wakhungu-Resume.pdf">Resume</a></div>
+</aside>
+<article class="article">
+  <p class="eyebrow">AI infrastructure case study</p>
+  <h1 class="display-title">AUTONOMOUS<br><span>ENGINEERING</span></h1>
+  <div class="article__meta"><span class="tag">Linear</span><span class="tag">LM Studio</span><span class="tag">Qwen</span><span class="tag">Codex CLI</span><span class="tag">Claude Code</span></div>
+  <nav class="case-nav" aria-label="Case studies"><a href="case-studies.html">Index</a><a href="case-study-kubernetes.html">Kubernetes</a><a href="case-study-autonomous-agents.html" aria-current="page">Agents</a><a href="case-study-discord-cli.html">Discord CLI</a></nav>
+  <section class="article-section"><h2>Problem</h2>
+<p>Engineering time is finite, and most of it competes with a day job. The question behind this project was narrow and practical: could a personal engineering backlog keep moving between 1 a.m. and 7 a.m., without a human present, without paying frontier-model API rates for every task, and without silently losing work if something broke overnight?</p>
+<p>The constraints made this harder than "run an agent in a loop." A local model running on a personal machine is free but limited in context and reliability. Cloud coding agents are capable but cost money per task and are easy to over-provision if used for everything. And any system that runs unattended for six hours needs a way to know, the next morning, whether it actually did what it reported doing.</p>
+</section>
+<section class="article-section"><h2>Approach</h2>
+<p>The system is built around three roles rather than one model:</p>
+<ol>
+<li><strong>Task source.</strong> A brainstorming pass (using a larger hosted model) turns rough ideas into concrete tasks, which are created and tracked as issues in Linear. Linear is the single source of truth for what is queued, in progress, or done.</li>
+<li><strong>First-pass local delegation.</strong> A cron-driven startup script brings up LM Studio and loads Qwen3.6-35B-A3B locally on a Mac with 48GB of RAM. Simple, narrowly-scoped tasks are dispatched to this local model first, since it costs nothing to run.</li>
+<li><strong>Overflow to paid agents.</strong> Tasks that exceed the local model's context budget or complexity are routed to Codex CLI, Claude Code, or a larger hosted model (GLM-5.2 via OpenRouter), which run externally and are not subject to the local model's context limits.</li>
+</ol>
+</section>
+<section class="article-section"><h2>Architecture</h2>
+<pre class="architecture-code"><code>Linear (task source)
+      |
+      v
+1am-7am cron dispatcher
+      |
+      v
+ Try: local Qwen3.6-35B-A3B (LM Studio, 32K context)
+      |
+      +--&gt; succeeds (task is small/simple) --&gt; write output --&gt; verify artifact
+      |
+      +--&gt; fails / too complex
+              |
+              v
+      Overflow: Codex CLI / Claude Code / GLM-5.2 (OpenRouter)
+              |
+              v
+      write output --&gt; verify artifact
+              |
+              v
+   Verification gate (confirm output files and
+   loaded model context actually exist, not just
+   a reported status)
+              |
+              v
+   Linear reconciliation (Done only if verified, else Backlog)</code></pre>
+</section>
+<section class="article-section"><h2>Outcome and Lessons</h2>
+<p>The most important result of this project was not a feature. It was catching a failure mode where the system looked healthy while doing nothing.</p>
+<p>For ten nights (July 7-17), every task dispatched to the local Qwen3.6 model failed immediately: each call hit a context-length-exceeded error after a single API call, completed in two to three seconds, and wrote no files. The delegation framework's own status field showed "completed" for these runs, which was an artifact of the process exiting, not a genuine report that any work had been done. The cause was a mismatch between LM Studio's default loaded context window (8,192 tokens) and the actual context injected by the delegation framework for each subagent (system prompt, tool schemas, and task prompt, typically 10-20K tokens). The model was technically loaded and would answer simple prompts directly, so a basic health check ("is the model running?") passed every night. But the moment a real delegated task arrived with its full context payload, the request exceeded the loaded window and failed after that single API call. The system's fallback logic routed the actual work to paid APIs, so tasks still completed, but the local model contributed nothing for over a week while consuming 20GB of RAM.</p>
+<p>The fix was straightforward once diagnosed: reload the model explicitly with <code>--context-length 32768</code> rather than relying on the API request to override context length (it cannot), and verify the loaded context via the model listing endpoint before declaring startup successful. The startup script now checks <code>loaded_context_length</code> directly against the running model and refuses to proceed if it falls short, instead of trusting that a loaded model is a working model.</p>
+<p>The broader lesson was procedural, not just technical: a subagent's own "completed" status is not evidence that anything happened. The local model still has a real role in this system, but only for short, narrowly-scoped tasks that fit comfortably inside its verified context budget. Everything else goes to Codex CLI or Claude Code, and a task is only marked Done in Linear after its actual output, not its reported status, has been checked.</p>
+</section>
+  <div class="article-actions"><a class="button" href="case-studies.html">All case studies</a><a class="button button--secondary" href="case-study-discord-cli.html">Next: Discord CLI</a></div>
+</article>
+</main>
+<footer class="site-footer">Copyright © 2026 Solomon Wakhungu. <a href="case-studies.html">Engineering case studies</a></footer>
+</body>
+</html>

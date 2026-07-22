@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Headless Discord Management CLI | Solomon Wakhungu</title>
+  <meta name="description" content="How a headless Discord management CLI performs one action per connection and returns predictable JSON for scripts, people, and AI agents.">
+  <meta name="author" content="Solomon Wakhungu">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="theme-color" content="#151312">
+  <link rel="canonical" href="https://solomonwakhungu.vercel.app/case-study-discord-cli.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="portfolio-content.css?v=20260721-3">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Solomon Wakhungu">
+  <meta property="og:title" content="Headless Discord Management CLI | Solomon Wakhungu">
+  <meta property="og:description" content="How a headless Discord management CLI performs one action per connection and returns predictable JSON for scripts, people, and AI agents.">
+  <meta property="og:url" content="https://solomonwakhungu.vercel.app/case-study-discord-cli.html">
+  <meta property="og:image" content="https://solomonwakhungu.vercel.app/images/case-studies-project.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Headless Discord Management CLI | Solomon Wakhungu">
+  <meta name="twitter:description" content="How a headless Discord management CLI performs one action per connection and returns predictable JSON for scripts, people, and AI agents.">
+  <meta name="twitter:image" content="https://solomonwakhungu.vercel.app/images/case-studies-project.svg">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"discord-cli, a Headless Discord Management CLI","description":"How a headless Discord management CLI performs one action per connection and returns predictable JSON for scripts, people, and AI agents.","url":"https://solomonwakhungu.vercel.app/case-study-discord-cli.html","mainEntityOfPage":"https://solomonwakhungu.vercel.app/case-study-discord-cli.html","isPartOf":{"@type":"CollectionPage","url":"https://solomonwakhungu.vercel.app/case-studies.html"},"author":{"@type":"Person","name":"Solomon Wakhungu","url":"https://solomonwakhungu.vercel.app/"},"keywords":["Python","discord.py","JSON","argparse","Automation"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://solomonwakhungu.vercel.app/"},{"@type":"ListItem","position":2,"name":"Case Studies","item":"https://solomonwakhungu.vercel.app/case-studies.html"},{"@type":"ListItem","position":3,"name":"discord-cli, a Headless Discord Management CLI","item":"https://solomonwakhungu.vercel.app/case-study-discord-cli.html"}]}]}</script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<nav class="site-nav" aria-label="Primary"><div class="site-nav__pill"><a href="index.html">Home</a><a href="experience.html">Experience</a><a href="projects.html" aria-current="page">Projects</a><a href="tools.html">Tools</a></div></nav>
+<main class="page-shell" id="content">
+<aside class="profile-card" aria-label="Solomon Wakhungu profile">
+  <h2>SOLOMON<br>WAKHUNGU</h2>
+  <p>Senior Software Engineer building reliable cloud platforms, Kubernetes systems, and AI infrastructure.</p>
+  <div class="profile-links"><a href="case-studies.html">All studies</a><a href="https://github.com/1solomonwakhungu/discord-cli">Repository</a><a href="Solomon-Wakhungu-Resume.pdf">Resume</a></div>
+</aside>
+<article class="article">
+  <p class="eyebrow">Developer tooling case study</p>
+  <h1 class="display-title">DISCORD<br><span>CLI</span></h1>
+  <div class="article__meta"><span class="tag">Python</span><span class="tag">discord.py</span><span class="tag">JSON</span><span class="tag">argparse</span><span class="tag">Automation</span></div>
+  <nav class="case-nav" aria-label="Case studies"><a href="case-studies.html">Index</a><a href="case-study-kubernetes.html">Kubernetes</a><a href="case-study-autonomous-agents.html">Agents</a><a href="case-study-discord-cli.html" aria-current="page">Discord CLI</a></nav>
+  <section class="article-section"><h2>Problem</h2>
+<p>Managing a Discord server through the standard client does not scale for repetitive administration, bulk operations, or any workflow where an AI agent needs to act on a server directly. Creating channels in bulk, auditing roles, moderating members, exporting message history, or reacting to a message from a script all require either clicking through the GUI by hand or standing up and maintaining a long-running bot process for tasks that are fundamentally one-shot.</p>
+<p>The goal was a command-line tool that could perform a single Discord management action, return a predictable result, and exit, without keeping a bot online and without requiring anything beyond a terminal and a bot token.</p>
+</section>
+<section class="article-section"><h2>Approach</h2>
+<p><code>discord_cli.py</code> is built on <code>discord.py</code> but inverts the usual bot pattern. Instead of a persistent client that stays connected and reacts to events, the CLI connects, waits for the <code>on_ready</code> event, performs exactly one requested action, and disconnects. Every invocation is a full connect-act-disconnect cycle. Output is JSON by default, structured as <code>{"ok": true/false, "data": ... }</code> or <code>{"ok": false, "error": {...}}</code>, so results can be piped into <code>jq</code>, parsed by a script, or consumed directly by another AI agent via <code>subprocess</code> and <code>json.loads</code>. A <code>--human</code> flag switches to a readable table view for interactive use.</p>
+</section>
+<section class="article-section"><h2>Architecture</h2>
+<pre class="architecture-code"><code>CLI args (argparse: resource + command)
+        |
+        v
+ build_parser() resolves one of 12 resource groups:
+ channel, category, role, member, message, guild,
+ permissions, webhook, invite, thread, search, export
+        |
+        v
+ ManagementClient(discord.Client)
+        |
+        v
+ on_ready --&gt; run the single requested action()
+        |
+        +--&gt; success --&gt; result dict
+        +--&gt; discord.HTTPException --&gt; {type, message, status, code}
+        +--&gt; PrivilegedIntentsRequired --&gt; retry with fallback intents
+        |
+        v
+ make_payload({ok, data|error}) --&gt; JSON (or --human table) --&gt; exit code (0/1)</code></pre>
+<p>The command surface covers roughly 50 commands across those twelve resource groups, for example <code>channel create/delete/edit/move/info</code>, <code>role assign/remove/edit</code>, <code>member kick/ban/timeout</code>, <code>message purge/pin/react</code>, and <code>export channel</code> (to JSON or CSV). Each resource is its own argparse subparser wired to a dedicated <code>action_*</code> coroutine, so adding a command means adding one function and one subparser entry rather than touching a shared dispatch table.</p>
+<p>Two design choices stand out. First, token loading checks the environment variable <code>DISCORD_BOT_TOKEN</code> first, then falls back to a local <code>.env</code> file next to the script or in the working directory, so the same script runs the same way in a developer's shell or inside an automated pipeline. Second, the client attempts to connect with full <code>discord.Intents.all()</code> first, and if Discord rejects the connection for lacking privileged intents, retries automatically with a reduced, non-privileged intent set and tags the result with a warning rather than failing outright. That fallback exists because Discord's privileged intents (message content, server members) require explicit opt-in in the bot's developer portal settings, and a CLI meant to be dropped into different servers cannot assume every bot has them enabled.</p>
+</section>
+<section class="article-section"><h2>Auditability and Platform Constraints</h2>
+<p>Every command produces the same envelope shape, whether it succeeds or fails, which makes output diffable and safe to log wholesale: nothing is printed except the one JSON object describing what happened. Errors carry the actual Discord API status code and error code alongside a message, rather than a generic failure string, which matters when the caller is another automated process deciding whether to retry.</p>
+<p>The tradeoffs are the ones inherent to Discord's platform, not the tool's design: privileged intents are gated per-bot by Discord regardless of what the CLI requests, rate limits apply exactly as they would to any bot client, and each invocation pays a fresh gateway handshake cost since there is no persistent connection to amortize it against. For low-frequency administrative commands this is a reasonable trade for not running a bot process at all; for high-frequency automation it would be worth adding a persistent daemon mode.</p>
+</section>
+<section class="article-section"><h2>Outcome and Lessons</h2>
+<p>The script reviewed here is the working, single-file implementation in active local use. Separately, a repository under this name is publicly hosted on GitHub under the MIT license, confirmed via the GitHub API as public with one star as of this writing. That star count is not evidence of adoption and is not claimed as such here; the repository's public status and license are the only claims made about it. The GitHub history also shows the project continuing to evolve past the version reviewed in this case study, including a later refactor into a modular package structure, which is a separate, ongoing effort from the script audited above.</p>
+</section>
+  <div class="article-actions"><a class="button" href="case-studies.html">All case studies</a><a class="button button--secondary" href="case-study-kubernetes.html">Next: Kubernetes</a></div>
+</article>
+</main>
+<footer class="site-footer">Copyright © 2026 Solomon Wakhungu. <a href="case-studies.html">Engineering case studies</a></footer>
+</body>
+</html>
