@@ -8,6 +8,40 @@
     "/projects.html": "Projects & Case Studies | Solomon Wakhungu",
     "/tools.html": "Engineering Stack | Solomon Wakhungu",
   };
+  const navigationRoutes = new Map([
+    ["/experience", "experience.html"],
+    ["/projects", "projects.html"],
+    ["/tools", "tools.html"],
+  ]);
+  const workingNavigationPaths = new Set(
+    [...navigationRoutes.values()].map((route) => `/${route}`),
+  );
+
+  function workingNavigationUrl(rawHref) {
+    if (!rawHref) return null;
+    const url = new URL(rawHref, window.location.href);
+    if (url.origin !== window.location.origin) return null;
+    const mappedRoute = navigationRoutes.get(url.pathname.replace(/\/+$/, ""));
+    if (mappedRoute) url.pathname = `/${mappedRoute}`;
+    return workingNavigationPaths.has(url.pathname) ? url : null;
+  }
+
+  document.addEventListener("click", (event) => {
+    if (
+      event.defaultPrevented
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) return;
+    const anchor = event.target.closest?.("a[href]");
+    const url = workingNavigationUrl(anchor?.getAttribute("href"));
+    if (!url) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    window.location.assign(url.href);
+  }, true);
 
   const text = new Map([
     ["AWS Nuke", "kFLEET"],
@@ -108,6 +142,12 @@
     });
 
     document.querySelectorAll("a").forEach((anchor) => {
+      const rawHref = anchor.getAttribute("href");
+      const workingUrl = workingNavigationUrl(rawHref);
+      if (workingUrl && rawHref !== `${workingUrl.pathname.slice(1)}${workingUrl.search}${workingUrl.hash}`) {
+        anchor.href = `${workingUrl.pathname.slice(1)}${workingUrl.search}${workingUrl.hash}`;
+      }
+
       const value = anchor.textContent.replace(/\s+/g, " ").trim();
       if (value === "DOWNLOAD MY RESUME") {
         anchor.href = "Solomon-Wakhungu-Resume.pdf";
@@ -173,7 +213,12 @@
   const startAfterHydration = () => {
     setTimeout(() => {
       patch();
-      observer.observe(document.documentElement, { childList: true, subtree: true });
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["href"],
+      });
       [250, 1000, 3000].forEach((delay) => setTimeout(patch, delay));
       setTimeout(() => observer.disconnect(), 6000);
     }, 750);

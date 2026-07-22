@@ -7,7 +7,7 @@ TEXT_FILES = [*ROOT.glob("*.html"), *ROOT.glob("sites/**/*.mjs")]
 LINKEDIN_URL = "https://www.linkedin.com/in/solomon-wakhungu-2712791bb/"
 EMAIL_PROTOCOL = "mail" + "to:"
 GMAIL_DOMAIN = "gmail" + ".com"
-ASSET_VERSION = "20260721-3"
+ASSET_VERSION = "20260721-4"
 
 old_first_desc = (
     "Designed scalable systems, streamlined portal deployment, and developed a DynamoDB backup strategy. "
