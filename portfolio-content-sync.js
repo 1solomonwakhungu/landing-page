@@ -17,6 +17,110 @@
     [...navigationRoutes.values()].map((route) => `/${route}`),
   );
 
+  // BEGIN GENERATED PROJECT CATALOG
+  const projects = [
+    {
+      "name": "kFLEET",
+      "href": "https://github.com/1solomonwakhungu/kfleet",
+      "description": "Go control plane with Kubernetes agents, an embedded web UI, WebSocket updates, SQLite inventory, and MCP tools.",
+      "tags": [
+        "Kubernetes",
+        "Go",
+        "MCP"
+      ],
+      "external": true
+    },
+    {
+      "name": "discord-cli",
+      "href": "https://github.com/1solomonwakhungu/discord-cli",
+      "description": "Python CLI with 50+ Discord administration commands, structured JSON output, and single-action connections for scripts and agents.",
+      "tags": [
+        "Python",
+        "CLI",
+        "Automation"
+      ],
+      "external": true
+    },
+    {
+      "name": "RunPod vLLM Deployer",
+      "href": "https://github.com/1solomonwakhungu/runpod-vllm-deployer",
+      "description": "Python CLI that plans, deploys, checks, smoke tests, and tears down OpenAI-compatible vLLM servers on RunPod GPUs.",
+      "tags": [
+        "Python",
+        "GPU",
+        "MLOps"
+      ],
+      "external": true
+    },
+    {
+      "name": "Engineering Case Studies",
+      "href": "case-studies.html",
+      "description": "Architecture and delivery accounts covering Kubernetes platforms, overnight autonomous agents, and Discord CLI engineering.",
+      "tags": [
+        "Architecture",
+        "Delivery",
+        "Operations"
+      ],
+      "external": false
+    },
+    {
+      "name": "Homeserver Infrastructure",
+      "href": "https://github.com/1solomonwakhungu/homeserver-infra",
+      "description": "Terraform and Terragrunt stacks for cloud-init Proxmox VMs, with reusable modules, remote state, validation, and operator runbooks.",
+      "tags": [
+        "Terraform",
+        "Terragrunt",
+        "Proxmox"
+      ],
+      "external": true
+    },
+    {
+      "name": "Homelab Core",
+      "href": "https://github.com/1solomonwakhungu/homelab-core",
+      "description": "Sanitized architecture, monitoring examples, and runbooks for routing, observability, backups, restores, and incident response.",
+      "tags": [
+        "Runbooks",
+        "Prometheus",
+        "Grafana"
+      ],
+      "external": true
+    },
+    {
+      "name": "Terraform AWS Private LLM",
+      "href": "https://github.com/1solomonwakhungu/terraform-aws-private-llm",
+      "description": "Terraform module for EC2-based Ollama and Open WebUI with encrypted EBS, Caddy, and optional Route 53 TLS.",
+      "tags": [
+        "Terraform",
+        "AWS",
+        "Ollama"
+      ],
+      "external": true
+    },
+    {
+      "name": "Typst Dev Container",
+      "href": "https://github.com/1solomonwakhungu/typst-dev-container",
+      "description": "Dev Container template for Typst and Pandoc document workflows, with smoke tests and release automation.",
+      "tags": [
+        "Dev Containers",
+        "Typst",
+        "Pandoc"
+      ],
+      "external": true
+    },
+    {
+      "name": "Fund Allocator",
+      "href": "https://github.com/1solomonwakhungu/fund-allocator",
+      "description": "Flask application that divides available funds across named accounts after reserving a checking balance and honoring minimum allocations.",
+      "tags": [
+        "Flask",
+        "Python",
+        "Kubernetes"
+      ],
+      "external": true
+    }
+  ];
+  // END GENERATED PROJECT CATALOG
+
   function workingNavigationUrl(rawHref) {
     if (!rawHref) return null;
     const url = new URL(rawHref, window.location.href);
@@ -63,7 +167,7 @@
     ["LATEST PROJECTS", "CASE STUDIES"],
   ]);
 
-  const cards = [
+  const legacyCards = [
     {
       old: "AWS Nuke",
       current: "kFLEET",
@@ -85,6 +189,114 @@
     { old: "Notion", current: "AWS", href: "https://aws.amazon.com/", image: "images/aws.svg" },
     { old: "Nextjs", current: "GitHub Actions", href: "https://github.com/features/actions", image: "images/github-actions.svg" },
   ];
+
+  function createProjectCard(project, position, headingLevel) {
+    const item = document.createElement("li");
+    item.className = "portfolio-project-item";
+
+    const anchor = document.createElement("a");
+    anchor.className = "portfolio-project-card";
+    anchor.href = project.href;
+    anchor.setAttribute(
+      "aria-label",
+      `${project.name}: ${project.description}${project.external ? " Opens GitHub in a new tab." : ""}`,
+    );
+    if (project.external) {
+      anchor.target = "_blank";
+      anchor.rel = "noopener";
+    }
+
+    const index = document.createElement("span");
+    index.className = "portfolio-project-card__index";
+    index.setAttribute("aria-hidden", "true");
+    index.textContent = String(position).padStart(2, "0");
+
+    const content = document.createElement("span");
+    content.className = "portfolio-project-card__content";
+
+    const tags = document.createElement("span");
+    tags.className = "portfolio-project-card__tags";
+    tags.textContent = project.tags.join(" · ");
+
+    const heading = document.createElement(headingLevel);
+    heading.className = "portfolio-project-card__title";
+    heading.textContent = project.name;
+
+    const description = document.createElement("span");
+    description.className = "portfolio-project-card__description";
+    description.textContent = project.description;
+
+    const arrow = document.createElement("span");
+    arrow.className = "portfolio-project-card__arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "↗";
+
+    content.append(tags, heading, description);
+    anchor.append(index, content, arrow);
+    item.append(anchor);
+    return item;
+  }
+
+  function renderProjectCollection() {
+    const isProjectsPage = window.location.pathname === "/projects.html";
+    const isHomePage = ["/", "/index.html", "/index.htm"].includes(window.location.pathname);
+    if (!isProjectsPage && !isHomePage) return;
+
+    const sections = [...document.querySelectorAll('[data-framer-name="Projects"]')];
+    const section = sections.find((node) => node.getClientRects().length > 0) || sections[0];
+    if (!section) return;
+
+    const legacyAnchors = [...section.querySelectorAll("a")].filter(
+      (anchor) => anchor.querySelector("h3") && !anchor.classList.contains("portfolio-project-card"),
+    );
+    let legacyList = legacyAnchors[0]?.parentElement;
+    while (
+      legacyList?.parentElement
+      && legacyList.parentElement !== section
+      && legacyAnchors.every((anchor) => legacyList.parentElement.contains(anchor))
+    ) {
+      legacyList = legacyList.parentElement;
+    }
+    if (!legacyList) return;
+    legacyList.classList.add("portfolio-projects-legacy");
+    legacyList.setAttribute("aria-hidden", "true");
+
+    const collectionId = isProjectsPage
+      ? "portfolio-project-collection"
+      : "portfolio-featured-projects";
+    if (section.querySelector(`#${collectionId}`)) return;
+
+    if (isProjectsPage) {
+      const heading = section.querySelector("h1");
+      heading?.classList.add("portfolio-project-collection__heading");
+      const muted = heading?.querySelector("span");
+      const firstText = heading?.firstChild;
+      if (firstText?.nodeType === Node.TEXT_NODE) firstText.textContent = "PROJECT";
+      if (muted) muted.textContent = "COLLECTION";
+    }
+
+    const collection = document.createElement("div");
+    collection.id = collectionId;
+    collection.className = `portfolio-project-collection${isHomePage ? " portfolio-project-collection--featured" : ""}`;
+
+    if (isProjectsPage) {
+      const intro = document.createElement("p");
+      intro.className = "portfolio-project-collection__intro";
+      intro.textContent = "Selected work across Kubernetes, developer tooling, GPU inference, infrastructure automation, and operational practice.";
+      collection.append(intro);
+    }
+
+    const list = document.createElement("ol");
+    list.className = `portfolio-project-grid${isHomePage ? " portfolio-project-grid--featured" : ""}`;
+    list.setAttribute("aria-label", isHomePage ? "Featured projects" : "Project collection");
+
+    const visibleProjects = isHomePage ? projects.slice(0, 3) : projects;
+    visibleProjects.forEach((project, index) => {
+      list.append(createProjectCard(project, index + 1, isProjectsPage ? "h2" : "h3"));
+    });
+    collection.append(list);
+    legacyList.before(collection);
+  }
 
   function patch() {
     const wantedTitle = titles[window.location.pathname];
@@ -161,7 +373,7 @@
       }
     });
 
-    cards.forEach((card) => {
+    legacyCards.forEach((card) => {
       document.querySelectorAll("a").forEach((anchor) => {
         const heading = anchor.querySelector("h3");
         const value = heading?.textContent.trim();
@@ -197,6 +409,8 @@
         });
       });
     });
+
+    renderProjectCollection();
   }
 
   let scheduled = false;

@@ -2,12 +2,22 @@ from pathlib import Path
 import json
 import re
 
+from project_catalog import PROJECTS
+
 ROOT = Path(__file__).resolve().parents[1]
 TEXT_FILES = [*ROOT.glob("*.html"), *ROOT.glob("sites/**/*.mjs")]
 LINKEDIN_URL = "https://www.linkedin.com/in/solomon-wakhungu-2712791bb/"
 EMAIL_PROTOCOL = "mail" + "to:"
 GMAIL_DOMAIN = "gmail" + ".com"
-ASSET_VERSION = "20260721-4"
+FORM_EMAIL_PLACEHOLDER = "Your" + "@email.com"
+EMAIL_ADDRESS_PATTERN = re.compile(
+    r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}",
+    flags=re.IGNORECASE,
+)
+ASSET_VERSION = "20260721-5"
+PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
+PROJECT_CATALOG_START = "  // BEGIN GENERATED PROJECT CATALOG"
+PROJECT_CATALOG_END = "  // END GENERATED PROJECT CATALOG"
 
 old_first_desc = (
     "Designed scalable systems, streamlined portal deployment, and developed a DynamoDB backup strategy. "
@@ -70,6 +80,7 @@ replacements = {
         "Maintained a Python image-processing platform supporting 5,000+ researchers and 130,000+ biological images, with Flask services and Google Cloud delivery pipelines.",
     "Budget": "Opportunity",
     "Select…": "Choose one…",
+    FORM_EMAIL_PLACEHOLDER: "Contact address",
     "<$3k": "Senior engineering role",
     "$3k - $5k": "Cloud platform project",
     "$5k - $10k": "Kubernetes / DevOps engagement",
@@ -138,6 +149,7 @@ for path in TEXT_FILES:
         text,
         flags=re.IGNORECASE,
     )
+    text = EMAIL_ADDRESS_PATTERN.sub("contact removed", text)
     text = text.replace(
         f'ajcQqYHqD:"mail",g81CiUUAE:"{LINKEDIN_URL}"',
         f'ajcQqYHqD:"linked",g81CiUUAE:"{LINKEDIN_URL}"',
@@ -157,7 +169,7 @@ meta = {
     },
     "projects.html": {
         "title": "Projects & Case Studies | Solomon Wakhungu",
-        "description": "Selected Kubernetes, cloud platform, developer tooling, and autonomous AI agent projects by Solomon Wakhungu.",
+        "description": "A nine-project collection spanning Kubernetes, developer tooling, GPU inference, Terraform, homelab operations, and engineering case studies.",
         "url": "https://solomonwakhungu.vercel.app/projects.html",
     },
     "tools.html": {
@@ -181,6 +193,43 @@ person_json = json.dumps({
     ],
     "knowsAbout": ["Go", "Python", "Amazon Web Services", "Kubernetes", "Terraform", "Platform Engineering", "AI Infrastructure"]
 }, separators=(",", ":"))
+
+project_items = []
+for position, project in enumerate(PROJECTS, start=1):
+    public_url = project["href"] if project["external"] else PRODUCTION_URL + project["href"]
+    item = {
+        "@type": "SoftwareSourceCode" if project["external"] else "CollectionPage",
+        "name": project["name"],
+        "description": project["description"],
+        "url": public_url,
+        "keywords": project["tags"],
+    }
+    if project["external"]:
+        item["codeRepository"] = project["href"]
+    project_items.append({"@type": "ListItem", "position": position, "item": item})
+
+project_schema_json = json.dumps({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Solomon Wakhungu engineering project collection",
+    "numberOfItems": len(PROJECTS),
+    "itemListElement": project_items,
+}, separators=(",", ":"))
+
+sync_path = ROOT / "portfolio-content-sync.js"
+sync_text = sync_path.read_text(encoding="utf-8")
+project_catalog_js = json.dumps(PROJECTS, ensure_ascii=False, indent=2)
+project_catalog_js = project_catalog_js.replace("\n", "\n  ")
+generated_catalog = (
+    f"{PROJECT_CATALOG_START}\n"
+    f"  const projects = {project_catalog_js};\n"
+    f"{PROJECT_CATALOG_END}"
+)
+catalog_pattern = rf"{re.escape(PROJECT_CATALOG_START)}.*?{re.escape(PROJECT_CATALOG_END)}"
+if not re.search(catalog_pattern, sync_text, flags=re.S):
+    raise RuntimeError("Could not locate generated project catalog markers")
+sync_text = re.sub(catalog_pattern, generated_catalog, sync_text, count=1, flags=re.S)
+sync_path.write_text(sync_text, encoding="utf-8")
 
 for filename, values in meta.items():
     path = ROOT / filename
@@ -222,6 +271,17 @@ for filename, values in meta.items():
     )
     if '<meta name="author" content="Solomon Wakhungu">' not in text:
         text = text.replace("</head>", additions + "</head>", 1)
+    project_schema_pattern = (
+        r'<script id="portfolio-project-collection-schema" type="application/ld\+json">'
+        r'.*?</script>\n?'
+    )
+    text = re.sub(project_schema_pattern, "", text, flags=re.S)
+    if filename == "projects.html":
+        project_schema = (
+            '<script id="portfolio-project-collection-schema" type="application/ld+json">'
+            f'{project_schema_json}</script>'
+        )
+        text = text.replace("</head>", project_schema + "\n</head>", 1)
     text = re.sub(
         r'<link rel="stylesheet" href="portfolio-mobile-fixes\.css(?:\?v=[^"]+)?">\n?',
         "",
@@ -256,5 +316,7 @@ for stale in [
 for forbidden in [EMAIL_PROTOCOL, GMAIL_DOMAIN]:
     if forbidden.lower() in combined.lower():
         raise RuntimeError("Legacy direct-email content remains")
+if EMAIL_ADDRESS_PATTERN.search(combined):
+    raise RuntimeError("Email address remains")
 
 print(f"Updated {len(TEXT_FILES)} HTML/module files and metadata for {len(meta)} public pages")
