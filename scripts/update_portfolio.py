@@ -15,11 +15,12 @@ EMAIL_ADDRESS_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 MOBILE_ASSET_VERSION = "20260721-5"
-SYNC_ASSET_VERSION = "20260721-11"
-HOME_FRAMER_VERSION = "20260721-case-studies"
+SYNC_ASSET_VERSION = "20260722-12"
+HOME_FRAMER_VERSION = "20260722-case-studies-absolute"
 HOME_FRAMER_MODULE = "DxnAd94XALAlOlb85GxH1KrtnPelwWOHJrojrJuQUqk.H5UZOHAH.mjs"
 FRAMER_ENTRY_MODULE = "default_script0.4LYAZALU.mjs"
 PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
+CASE_STUDIES_HERO_URL = f"{PRODUCTION_URL}case-studies.html"
 PROJECT_CATALOG_START = "  // BEGIN GENERATED PROJECT CATALOG"
 PROJECT_CATALOG_END = "  // END GENERATED PROJECT CATALOG"
 
@@ -122,6 +123,7 @@ def replace_current_role(text: str) -> str:
 
 def replace_case_studies_hero_link(text: str) -> str:
     """Keep the case-studies hero card correct in static and hydrated output."""
+    static_target = f'href="{CASE_STUDIES_HERO_URL}"'
     static_marker = ">READ ENGINEERING</p>"
     cursor = 0
     while (marker_index := text.find(static_marker, cursor)) >= 0:
@@ -129,15 +131,20 @@ def replace_case_studies_hero_link(text: str) -> str:
         arrow_index = text.find('data-framer-name="Arrow Button"', marker_index, card_end)
         if arrow_index < 0:
             raise RuntimeError("Could not locate case-studies hero Arrow Button")
-        wrong_href = text.find('href="projects.html"', arrow_index, card_end)
-        right_href = text.find('href="case-studies.html"', arrow_index, card_end)
-        if wrong_href >= 0 and (right_href < 0 or wrong_href < right_href):
-            text = text[:wrong_href] + 'href="case-studies.html"' + text[wrong_href + len('href="projects.html"'):]
-            cursor = wrong_href + len('href="case-studies.html"')
-        elif right_href >= 0:
-            cursor = right_href + len('href="case-studies.html"')
-        else:
+        targets = [
+            (text.find('href="projects.html"', arrow_index, card_end), 'href="projects.html"'),
+            (text.find('href="case-studies.html"', arrow_index, card_end), 'href="case-studies.html"'),
+            (text.find(static_target, arrow_index, card_end), static_target),
+        ]
+        target_index, current_target = min(
+            (candidate for candidate in targets if candidate[0] >= 0),
+            default=(-1, ""),
+        )
+        if target_index < 0:
             raise RuntimeError("Case-studies hero Arrow Button has an unexpected static target")
+        if current_target != static_target:
+            text = text[:target_index] + static_target + text[target_index + len(current_target):]
+        cursor = target_index + len(static_target)
 
     hydration_marker = 'children:"READ ENGINEERING"'
     cursor = 0
@@ -149,11 +156,13 @@ def replace_case_studies_hero_link(text: str) -> str:
             raise RuntimeError("Could not locate case-studies hero hydration links")
         link_block = text[links_start:links_end]
         wrong_target = 'href:{webPageId:"anMi4_oPG"}'
-        right_target = 'href:"case-studies.html"'
-        wrong_count = link_block.count(wrong_target)
-        right_count = link_block.count(right_target)
+        relative_target = 'href:"case-studies.html"'
+        absolute_target = f'href:"{CASE_STUDIES_HERO_URL}"'
+        wrong_count = link_block.count(wrong_target) + link_block.count(relative_target)
+        right_count = link_block.count(absolute_target)
         if wrong_count == 4 and right_count == 0:
-            link_block = link_block.replace(wrong_target, right_target)
+            link_block = link_block.replace(wrong_target, absolute_target)
+            link_block = link_block.replace(relative_target, absolute_target)
             text = text[:links_start] + link_block + text[links_end:]
         elif wrong_count != 0 or right_count != 4:
             raise RuntimeError("Case-studies hero hydration links have unexpected targets")

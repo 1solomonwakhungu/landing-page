@@ -23,10 +23,11 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE_URL = "http://127.0.0.1:4173/"
 PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
 MOBILE_ASSET_VERSION = "20260721-5"
-SYNC_ASSET_VERSION = "20260721-11"
-HOME_FRAMER_VERSION = "20260721-case-studies"
+SYNC_ASSET_VERSION = "20260722-12"
+HOME_FRAMER_VERSION = "20260722-case-studies-absolute"
 HOME_FRAMER_MODULE = "DxnAd94XALAlOlb85GxH1KrtnPelwWOHJrojrJuQUqk.H5UZOHAH.mjs"
 FRAMER_ENTRY_MODULE = "default_script0.4LYAZALU.mjs"
+CASE_STUDIES_HERO_URL = "https://solomonwakhungu.vercel.app/case-studies.html"
 SANITIZED_RESUME_SHA256 = "447ca1831440599d21985607c5273c7b30cc84b3c78745bc279ac8d417d7289e"
 PAGES = [
     "index.html",
@@ -332,7 +333,7 @@ def validate() -> list[str]:
                 fail(errors, "index.html: case-studies hero card missing")
             for links in case_studies_cards:
                 arrow_targets = [href for name, href in links if name == "Arrow Button"]
-                if arrow_targets != ["case-studies.html"]:
+                if arrow_targets != [CASE_STUDIES_HERO_URL]:
                     fail(errors, f"index.html: case-studies hero Arrow Button targets {arrow_targets}")
             if "projects.html" not in parser.hrefs:
                 fail(errors, "index.html: Projects navigation must target projects.html")
@@ -520,6 +521,7 @@ def validate() -> list[str]:
         'document.addEventListener("click"',
         "caseStudiesHeroArrow(anchor)",
         "event.stopImmediatePropagation()",
+        "window.location.assign(caseStudiesHeroUrl)",
         "window.location.assign(url.href)",
     ]:
         if required not in runtime_sync:
@@ -537,8 +539,11 @@ def validate() -> list[str]:
         fail(errors, "Framer hydration: case-studies hero links missing")
     else:
         hero_links = hydration_source[links_start:links_end]
-        if hero_links.count('href:"case-studies.html"') != 4:
-            fail(errors, "Framer hydration: case-studies hero must target case-studies.html")
+        absolute_target = f'href:"{CASE_STUDIES_HERO_URL}"'
+        if hero_links.count(absolute_target) != 4:
+            fail(errors, "Framer hydration: case-studies hero must target its absolute URL")
+        if 'href:"case-studies.html"' in hero_links:
+            fail(errors, "Framer hydration: relative case-studies hero target remains")
         if 'href:{webPageId:"anMi4_oPG"}' in hero_links:
             fail(errors, "Framer hydration: case-studies hero still targets projects.html")
     if 'href:{webPageId:"anMi4_oPG"}' not in hydration_source:
