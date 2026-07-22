@@ -6,7 +6,7 @@ Source for [solomonwakhungu.vercel.app](https://solomonwakhungu.vercel.app/).
 
 - `index.html`: homepage
 - `experience.html`: professional experience
-- `projects.html`: featured engineering work
+- `projects.html`: full engineering project collection
 - `tools.html`: engineering stack
 - `case-studies.html`: case study index
 - `case-study-*.html`: detailed architecture and delivery case studies
@@ -17,11 +17,14 @@ The original Framer visual design is preserved. Portfolio copy, project evidence
 ## Local verification
 
 ```bash
+python3 -m pip install -r requirements-validation.txt
 python3 -m http.server 4173
 python3 scripts/validate_portfolio.py
 ```
 
 Open `http://localhost:4173/` and verify all pages before pushing to `main`. The validator checks every public route, internal references, metadata, JSON-LD, approved case-study copy, forbidden direct-email content, generated JavaScript syntax, the sitemap, robots.txt, and required assets.
+
+The resume text scan requires either Poppler's `pdftotext` command or the `pypdf` Python package.
 
 ## Case-study publishing
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
 import urllib.error
@@ -16,10 +17,12 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 from generate_case_studies import SOURCE_ROOT, STUDIES, markdown_body
+from project_catalog import PROJECTS
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_URL = "http://127.0.0.1:4173/"
 PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
+ASSET_VERSION = "20260721-5"
 SANITIZED_RESUME_SHA256 = "447ca1831440599d21985607c5273c7b30cc84b3c78745bc279ac8d417d7289e"
 PAGES = [
     "index.html",
@@ -58,6 +61,10 @@ STALE_COPY = [
 ]
 EMAIL_PROTOCOL = "mail" + "to:"
 GMAIL_DOMAIN = "gmail" + ".com"
+EMAIL_ADDRESS_PATTERN = re.compile(
+    rb"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}",
+    flags=re.IGNORECASE,
+)
 CASE_PAGES = {study["slug"]: study for study in STUDIES}
 REQUIRED_CASE_COPY = {
     "case-study-kubernetes.html": [
@@ -85,6 +92,11 @@ UNSUPPORTED_CASE_COPY = [
     "roughly 50 minutes",
     "about four minutes",
     "50+ command",
+]
+EXCLUDED_PROJECTS = [
+    "go-production-api-starter",
+    "superset-agent-orchestrator",
+    "gronify",
 ]
 
 
@@ -196,11 +208,18 @@ def validate() -> list[str]:
     forbidden_bytes = [EMAIL_PROTOCOL.encode(), GMAIL_DOMAIN.encode()]
     em_dash = "\u2014".encode("utf-8")
     for path in ROOT.rglob("*"):
-        if not path.is_file() or ".git" in path.parts or "__pycache__" in path.parts:
+        if (
+            not path.is_file()
+            or ".git" in path.parts
+            or "__pycache__" in path.parts
+            or ".tmp-validation-venv" in path.parts
+        ):
             continue
         data = path.read_bytes().lower()
         if any(needle in data for needle in forbidden_bytes):
             fail(errors, f"{path.relative_to(ROOT)}: legacy direct-email content found")
+        if EMAIL_ADDRESS_PATTERN.search(data):
+            fail(errors, f"{path.relative_to(ROOT)}: email address found")
         if em_dash in data:
             fail(errors, f"{path.relative_to(ROOT)}: em dash found")
 
@@ -249,10 +268,10 @@ def validate() -> list[str]:
                 fail(errors, f"{page}: JSON-LD block {index} invalid: {exc}")
         if page in ORIGINAL_PAGES:
             sync_references = re.findall(r'portfolio-content-sync\.js(?:\?v=[^"<]+)?', source)
-            if sync_references != ["portfolio-content-sync.js?v=20260721-4"]:
+            if sync_references != [f"portfolio-content-sync.js?v={ASSET_VERSION}"]:
                 fail(errors, f"{page}: content sync script missing or duplicated")
             mobile_references = re.findall(r'portfolio-mobile-fixes\.css(?:\?v=[^"<]+)?', source)
-            if mobile_references != ["portfolio-mobile-fixes.css?v=20260721-3"]:
+            if mobile_references != [f"portfolio-mobile-fixes.css?v={ASSET_VERSION}"]:
                 fail(errors, f"{page}: mobile stylesheet missing or duplicated")
             for broken_route, working_route in NAVIGATION_ROUTES.items():
                 if working_route not in parser.hrefs:
@@ -281,6 +300,39 @@ def validate() -> list[str]:
             missing_navigation = sorted(required_navigation - set(parser.hrefs))
             if missing_navigation:
                 fail(errors, f"{page}: missing case-study navigation {missing_navigation}")
+
+        if page == "projects.html":
+            parsed_jsonld = []
+            for block in parser.jsonld:
+                try:
+                    parsed_jsonld.append(json.loads(block))
+                except json.JSONDecodeError:
+                    continue
+            item_lists = [block for block in parsed_jsonld if block.get("@type") == "ItemList"]
+            if len(item_lists) != 1:
+                fail(errors, f"{page}: expected one project ItemList schema")
+            else:
+                item_list = item_lists[0]
+                entries = item_list.get("itemListElement", [])
+                expected_entries = []
+                for position, project in enumerate(PROJECTS, start=1):
+                    public_url = project["href"] if project["external"] else urllib.parse.urljoin(
+                        PRODUCTION_URL, project["href"]
+                    )
+                    expected_entries.append((position, project["name"], public_url, project["description"]))
+                actual_entries = [
+                    (
+                        entry.get("position"),
+                        entry.get("item", {}).get("name"),
+                        entry.get("item", {}).get("url"),
+                        entry.get("item", {}).get("description"),
+                    )
+                    for entry in entries
+                ]
+                if item_list.get("numberOfItems") != len(PROJECTS):
+                    fail(errors, f"{page}: project schema count mismatch")
+                if actual_entries != expected_entries:
+                    fail(errors, f"{page}: project schema catalog mismatch")
 
         try:
             status, body, _ = fetch(urllib.parse.urljoin(BASE_URL, page))
@@ -318,6 +370,35 @@ def validate() -> list[str]:
     deployed_hash = hashlib.sha256(deployed_resume.read_bytes()).hexdigest()
     if deployed_hash != SANITIZED_RESUME_SHA256:
         fail(errors, "portfolio resume differs from the verified sanitized artifact")
+    pdftotext = shutil.which("pdftotext")
+    extracted_pdf_text: bytes | None = None
+    if pdftotext:
+        result = subprocess.run(
+            [pdftotext, str(deployed_resume), "-"],
+            cwd=ROOT,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode:
+            fail(errors, "resume PDF text extraction failed")
+        else:
+            extracted_pdf_text = result.stdout
+    else:
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            fail(errors, "pdftotext or pypdf is required for the resume email scan")
+        else:
+            reader = PdfReader(deployed_resume)
+            extracted_pdf_text = "\n".join(
+                page.extract_text() or "" for page in reader.pages
+            ).encode("utf-8")
+    if extracted_pdf_text is not None and (
+        EMAIL_ADDRESS_PATTERN.search(extracted_pdf_text)
+        or EMAIL_PROTOCOL.encode() in extracted_pdf_text.lower()
+        or GMAIL_DOMAIN.encode() in extracted_pdf_text.lower()
+    ):
+        fail(errors, "resume PDF contains direct-email content")
 
     if SOURCE_ROOT.exists():
         for study in STUDIES:
@@ -336,6 +417,33 @@ def validate() -> list[str]:
             fail(errors, f"{stylesheet}: viewport width unit can cause horizontal overflow")
 
     runtime_sync = (ROOT / "portfolio-content-sync.js").read_text(encoding="utf-8")
+    catalog_match = re.search(
+        r"// BEGIN GENERATED PROJECT CATALOG\s+const projects = (\[.*?\]);\s+"
+        r"// END GENERATED PROJECT CATALOG",
+        runtime_sync,
+        flags=re.S,
+    )
+    if not catalog_match:
+        fail(errors, "portfolio-content-sync.js: generated project catalog missing")
+    else:
+        try:
+            runtime_projects = json.loads(catalog_match.group(1))
+            if runtime_projects != PROJECTS:
+                fail(errors, "portfolio-content-sync.js: generated project catalog differs from source")
+        except json.JSONDecodeError as exc:
+            fail(errors, f"portfolio-content-sync.js: project catalog JSON invalid: {exc}")
+    for required in [
+        "portfolio-project-collection",
+        "portfolio-featured-projects",
+        "projects.slice(0, 3)",
+        'project.tags.join(" · ")',
+    ]:
+        if required not in runtime_sync:
+            fail(errors, f"portfolio-content-sync.js: missing project collection safeguard {required}")
+    project_source = (ROOT / "projects.html").read_text(encoding="utf-8") + runtime_sync
+    for excluded in EXCLUDED_PROJECTS:
+        if excluded in project_source:
+            fail(errors, f"project collection includes excluded repository {excluded}")
     for required in ["#contact", "scrollIntoView", ".framer-108jl35-container", "LinkedIn"]:
         if required not in runtime_sync:
             fail(errors, f"portfolio-content-sync.js: missing hydration safeguard {required}")
