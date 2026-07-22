@@ -22,7 +22,11 @@ from project_catalog import PROJECTS
 ROOT = Path(__file__).resolve().parents[1]
 BASE_URL = "http://127.0.0.1:4173/"
 PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
-ASSET_VERSION = "20260721-5"
+MOBILE_ASSET_VERSION = "20260721-5"
+SYNC_ASSET_VERSION = "20260721-11"
+HOME_FRAMER_VERSION = "20260721-case-studies"
+HOME_FRAMER_MODULE = "DxnAd94XALAlOlb85GxH1KrtnPelwWOHJrojrJuQUqk.H5UZOHAH.mjs"
+FRAMER_ENTRY_MODULE = "default_script0.4LYAZALU.mjs"
 SANITIZED_RESUME_SHA256 = "447ca1831440599d21985607c5273c7b30cc84b3c78745bc279ac8d417d7289e"
 PAGES = [
     "index.html",
@@ -163,6 +167,44 @@ class PageParser(HTMLParser):
             self._jsonld_buffer.append(data)
 
 
+class FramerRegionParser(HTMLParser):
+    """Collect text and links from selected named Framer regions."""
+
+    def __init__(self, region_name: str) -> None:
+        super().__init__(convert_charrefs=True)
+        self.region_name = region_name
+        self.regions: list[tuple[str, list[tuple[str, str]]]] = []
+        self._depth = 0
+        self._text: list[str] = []
+        self._links: list[tuple[str, str]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        data = dict(attrs)
+        if not self._depth and tag == "div" and data.get("data-framer-name") == self.region_name:
+            self._depth = 1
+            self._text = []
+            self._links = []
+            return
+        if not self._depth:
+            return
+        if tag == "div":
+            self._depth += 1
+        elif tag == "a":
+            self._links.append((data.get("data-framer-name") or "", data.get("href") or ""))
+
+    def handle_endtag(self, tag: str) -> None:
+        if not self._depth or tag != "div":
+            return
+        self._depth -= 1
+        if not self._depth:
+            text = " ".join(" ".join(self._text).split())
+            self.regions.append((text, self._links))
+
+    def handle_data(self, data: str) -> None:
+        if self._depth:
+            self._text.append(data)
+
+
 def fail(errors: list[str], message: str) -> None:
     errors.append(message)
 
@@ -268,10 +310,10 @@ def validate() -> list[str]:
                 fail(errors, f"{page}: JSON-LD block {index} invalid: {exc}")
         if page in ORIGINAL_PAGES:
             sync_references = re.findall(r'portfolio-content-sync\.js(?:\?v=[^"<]+)?', source)
-            if sync_references != [f"portfolio-content-sync.js?v={ASSET_VERSION}"]:
+            if sync_references != [f"portfolio-content-sync.js?v={SYNC_ASSET_VERSION}"]:
                 fail(errors, f"{page}: content sync script missing or duplicated")
             mobile_references = re.findall(r'portfolio-mobile-fixes\.css(?:\?v=[^"<]+)?', source)
-            if mobile_references != [f"portfolio-mobile-fixes.css?v={ASSET_VERSION}"]:
+            if mobile_references != [f"portfolio-mobile-fixes.css?v={MOBILE_ASSET_VERSION}"]:
                 fail(errors, f"{page}: mobile stylesheet missing or duplicated")
             for broken_route, working_route in NAVIGATION_ROUTES.items():
                 if working_route not in parser.hrefs:
@@ -279,6 +321,26 @@ def validate() -> list[str]:
                 broken_references = {broken_route, broken_route.lstrip("/"), f".{broken_route}"}
                 if broken_references & set(parser.hrefs):
                     fail(errors, f"{page}: extensionless navigation route remains for {broken_route}")
+        if page == "index.html":
+            card_parser = FramerRegionParser("Card")
+            card_parser.feed(source)
+            case_studies_cards = [
+                links for text, links in card_parser.regions
+                if text == "READ ENGINEERING CASE STUDIES"
+            ]
+            if not case_studies_cards:
+                fail(errors, "index.html: case-studies hero card missing")
+            for links in case_studies_cards:
+                arrow_targets = [href for name, href in links if name == "Arrow Button"]
+                if arrow_targets != ["case-studies.html"]:
+                    fail(errors, f"index.html: case-studies hero Arrow Button targets {arrow_targets}")
+            if "projects.html" not in parser.hrefs:
+                fail(errors, "index.html: Projects navigation must target projects.html")
+            framer_root = "sites/UpKjbusrEfSd0EVu97xOs/"
+            for asset in [HOME_FRAMER_MODULE, FRAMER_ENTRY_MODULE]:
+                expected_asset = f"{framer_root}{asset}?v={HOME_FRAMER_VERSION}"
+                if source.count(expected_asset) != 1:
+                    fail(errors, f"index.html: homepage Framer asset is not cache-safe: {asset}")
         for reference in parser.hrefs + parser.sources:
             verify_internal_reference(page, reference, errors)
         for stale in STALE_COPY:
@@ -437,6 +499,7 @@ def validate() -> list[str]:
         "portfolio-featured-projects",
         "projects.slice(0, 3)",
         'project.tags.join(" · ")',
+        'const isProjectsPage = window.location.pathname === "/projects.html";',
     ]:
         if required not in runtime_sync:
             fail(errors, f"portfolio-content-sync.js: missing project collection safeguard {required}")
@@ -455,11 +518,37 @@ def validate() -> list[str]:
         'attributes: true',
         'attributeFilter: ["href"]',
         'document.addEventListener("click"',
+        "caseStudiesHeroArrow(anchor)",
         "event.stopImmediatePropagation()",
         "window.location.assign(url.href)",
     ]:
         if required not in runtime_sync:
             fail(errors, f"portfolio-content-sync.js: missing href hydration safeguard {required}")
+
+    hydration_source = "\n".join(
+        path.read_text(encoding="utf-8") for path in ROOT.glob("sites/**/*.mjs")
+    )
+    hydration_marker = 'children:"READ ENGINEERING"'
+    marker_index = hydration_source.find(hydration_marker)
+    label_index = hydration_source.find('children:"CASE STUDIES"', marker_index, marker_index + 3000)
+    links_start = hydration_source.find("links:[", label_index, label_index + 1200)
+    links_end = hydration_source.find("],children:", links_start, links_start + 1200)
+    if min(marker_index, label_index, links_start, links_end) < 0:
+        fail(errors, "Framer hydration: case-studies hero links missing")
+    else:
+        hero_links = hydration_source[links_start:links_end]
+        if hero_links.count('href:"case-studies.html"') != 4:
+            fail(errors, "Framer hydration: case-studies hero must target case-studies.html")
+        if 'href:{webPageId:"anMi4_oPG"}' in hero_links:
+            fail(errors, "Framer hydration: case-studies hero still targets projects.html")
+    if 'href:{webPageId:"anMi4_oPG"}' not in hydration_source:
+        fail(errors, "Framer hydration: Projects navigation route missing")
+    entry_source = (ROOT / "sites" / "UpKjbusrEfSd0EVu97xOs" / FRAMER_ENTRY_MODULE).read_text(
+        encoding="utf-8"
+    )
+    expected_import = f'import("./{HOME_FRAMER_MODULE}?v={HOME_FRAMER_VERSION}")'
+    if expected_import not in entry_source:
+        fail(errors, "Framer entry module: homepage hydration import is not cache-safe")
 
     javascript_files = [ROOT / "portfolio-content-sync.js", *ROOT.glob("sites/**/*.mjs")]
     for javascript in javascript_files:

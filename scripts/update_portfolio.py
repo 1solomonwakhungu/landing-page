@@ -14,7 +14,11 @@ EMAIL_ADDRESS_PATTERN = re.compile(
     r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}",
     flags=re.IGNORECASE,
 )
-ASSET_VERSION = "20260721-5"
+MOBILE_ASSET_VERSION = "20260721-5"
+SYNC_ASSET_VERSION = "20260721-11"
+HOME_FRAMER_VERSION = "20260721-case-studies"
+HOME_FRAMER_MODULE = "DxnAd94XALAlOlb85GxH1KrtnPelwWOHJrojrJuQUqk.H5UZOHAH.mjs"
+FRAMER_ENTRY_MODULE = "default_script0.4LYAZALU.mjs"
 PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
 PROJECT_CATALOG_START = "  // BEGIN GENERATED PROJECT CATALOG"
 PROJECT_CATALOG_END = "  // END GENERATED PROJECT CATALOG"
@@ -115,12 +119,60 @@ def replace_current_role(text: str) -> str:
             text = text[:start] + value + text[end:]
     return text
 
+
+def replace_case_studies_hero_link(text: str) -> str:
+    """Keep the case-studies hero card correct in static and hydrated output."""
+    static_marker = ">READ ENGINEERING</p>"
+    cursor = 0
+    while (marker_index := text.find(static_marker, cursor)) >= 0:
+        card_end = min(marker_index + 4000, len(text))
+        arrow_index = text.find('data-framer-name="Arrow Button"', marker_index, card_end)
+        if arrow_index < 0:
+            raise RuntimeError("Could not locate case-studies hero Arrow Button")
+        wrong_href = text.find('href="projects.html"', arrow_index, card_end)
+        right_href = text.find('href="case-studies.html"', arrow_index, card_end)
+        if wrong_href >= 0 and (right_href < 0 or wrong_href < right_href):
+            text = text[:wrong_href] + 'href="case-studies.html"' + text[wrong_href + len('href="projects.html"'):]
+            cursor = wrong_href + len('href="case-studies.html"')
+        elif right_href >= 0:
+            cursor = right_href + len('href="case-studies.html"')
+        else:
+            raise RuntimeError("Case-studies hero Arrow Button has an unexpected static target")
+
+    hydration_marker = 'children:"READ ENGINEERING"'
+    cursor = 0
+    while (marker_index := text.find(hydration_marker, cursor)) >= 0:
+        label_index = text.find('children:"CASE STUDIES"', marker_index, marker_index + 3000)
+        links_start = text.find("links:[", label_index, label_index + 1200) if label_index >= 0 else -1
+        links_end = text.find("],children:", links_start, links_start + 1200) if links_start >= 0 else -1
+        if links_start < 0 or links_end < 0:
+            raise RuntimeError("Could not locate case-studies hero hydration links")
+        link_block = text[links_start:links_end]
+        wrong_target = 'href:{webPageId:"anMi4_oPG"}'
+        right_target = 'href:"case-studies.html"'
+        wrong_count = link_block.count(wrong_target)
+        right_count = link_block.count(right_target)
+        if wrong_count == 4 and right_count == 0:
+            link_block = link_block.replace(wrong_target, right_target)
+            text = text[:links_start] + link_block + text[links_end:]
+        elif wrong_count != 0 or right_count != 4:
+            raise RuntimeError("Case-studies hero hydration links have unexpected targets")
+        cursor = links_start + len(link_block)
+    return text
+
 for path in TEXT_FILES:
     text = path.read_text(encoding="utf-8-sig")
     text = replace_current_role(text)
     text = text.replace("Sept 2023 - Present", "Mar 2026 - Present")
     for old, new in replacements.items():
         text = text.replace(old, new)
+    text = replace_case_studies_hero_link(text)
+    if path.name == FRAMER_ENTRY_MODULE:
+        text = re.sub(
+            rf'\./{re.escape(HOME_FRAMER_MODULE)}(?:\?v=[^"<]+)?',
+            f'./{HOME_FRAMER_MODULE}?v={HOME_FRAMER_VERSION}',
+            text,
+        )
     # Update isolated hero/stat/form literals without touching component identifiers.
     text = text.replace(">SOFTWARE<", ">PLATFORM<").replace('children:"SOFTWARE"', 'children:"PLATFORM"')
     text = text.replace(">+4<", ">5+<").replace('children:"+4"', 'children:"5+"')
@@ -287,18 +339,27 @@ for filename, values in meta.items():
         "",
         text,
     )
-    mobile_css = f'<link rel="stylesheet" href="portfolio-mobile-fixes.css?v={ASSET_VERSION}">'
+    mobile_css = f'<link rel="stylesheet" href="portfolio-mobile-fixes.css?v={MOBILE_ASSET_VERSION}">'
     text = text.replace("</head>", mobile_css + "\n</head>", 1)
     text = re.sub(
         r'<script src="portfolio-content-sync\.js(?:\?v=[^"]+)?" defer></script>\n?',
         "",
         text,
     )
-    sync_script = f'<script src="portfolio-content-sync.js?v={ASSET_VERSION}" defer></script>'
+    sync_script = f'<script src="portfolio-content-sync.js?v={SYNC_ASSET_VERSION}" defer></script>'
     text = text.replace("</body>", sync_script + "\n</body>", 1)
     if filename == "index.html" and 'id="contact"' not in text:
         contact_anchor = '<span id="contact" class="portfolio-contact-anchor" aria-hidden="true"></span>'
         text = text.replace(sync_script, contact_anchor + "\n" + sync_script, 1)
+    if filename == "index.html":
+        framer_root = "sites/UpKjbusrEfSd0EVu97xOs/"
+        for asset in [HOME_FRAMER_MODULE, FRAMER_ENTRY_MODULE]:
+            asset_path = framer_root + asset
+            text = re.sub(
+                rf'{re.escape(asset_path)}(?:\?v=[^"<]+)?',
+                f'{asset_path}?v={HOME_FRAMER_VERSION}',
+                text,
+            )
     path.write_text(text)
 
 # Ensure the critical stale claims are gone from generated HTML and hydration code.
