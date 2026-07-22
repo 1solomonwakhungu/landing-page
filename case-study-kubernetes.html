@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kubernetes and GitOps Platform Work | Solomon Wakhungu</title>
+  <meta name="description" content="A composite case study of enterprise Kubernetes work on AWS using Terraform, Argo CD, Helm, RBAC, CI, and observable GitOps delivery.">
+  <meta name="author" content="Solomon Wakhungu">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="theme-color" content="#151312">
+  <link rel="canonical" href="https://solomonwakhungu.vercel.app/case-study-kubernetes.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="portfolio-content.css?v=20260721-3">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Solomon Wakhungu">
+  <meta property="og:title" content="Kubernetes and GitOps Platform Work | Solomon Wakhungu">
+  <meta property="og:description" content="A composite case study of enterprise Kubernetes work on AWS using Terraform, Argo CD, Helm, RBAC, CI, and observable GitOps delivery.">
+  <meta property="og:url" content="https://solomonwakhungu.vercel.app/case-study-kubernetes.html">
+  <meta property="og:image" content="https://solomonwakhungu.vercel.app/images/kfleet-project.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes and GitOps Platform Work | Solomon Wakhungu">
+  <meta name="twitter:description" content="A composite case study of enterprise Kubernetes work on AWS using Terraform, Argo CD, Helm, RBAC, CI, and observable GitOps delivery.">
+  <meta name="twitter:image" content="https://solomonwakhungu.vercel.app/images/kfleet-project.svg">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Enterprise Kubernetes and GitOps Platform Work","description":"A composite case study of enterprise Kubernetes work on AWS using Terraform, Argo CD, Helm, RBAC, CI, and observable GitOps delivery.","url":"https://solomonwakhungu.vercel.app/case-study-kubernetes.html","mainEntityOfPage":"https://solomonwakhungu.vercel.app/case-study-kubernetes.html","isPartOf":{"@type":"CollectionPage","url":"https://solomonwakhungu.vercel.app/case-studies.html"},"author":{"@type":"Person","name":"Solomon Wakhungu","url":"https://solomonwakhungu.vercel.app/"},"keywords":["Kubernetes","AWS","Terraform","Argo CD","GitOps"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://solomonwakhungu.vercel.app/"},{"@type":"ListItem","position":2,"name":"Case Studies","item":"https://solomonwakhungu.vercel.app/case-studies.html"},{"@type":"ListItem","position":3,"name":"Enterprise Kubernetes and GitOps Platform Work","item":"https://solomonwakhungu.vercel.app/case-study-kubernetes.html"}]}]}</script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<nav class="site-nav" aria-label="Primary"><div class="site-nav__pill"><a href="index.html">Home</a><a href="experience.html">Experience</a><a href="projects.html" aria-current="page">Projects</a><a href="tools.html">Tools</a></div></nav>
+<main class="page-shell" id="content">
+<aside class="profile-card" aria-label="Solomon Wakhungu profile">
+  <h2>SOLOMON<br>WAKHUNGU</h2>
+  <p>Senior Software Engineer building reliable cloud platforms, Kubernetes systems, and AI infrastructure.</p>
+  <div class="profile-links"><a href="case-studies.html">All studies</a><a href="https://www.linkedin.com/in/solomon-wakhungu-2712791bb/">LinkedIn</a><a href="Solomon-Wakhungu-Resume.pdf">Resume</a></div>
+</aside>
+<article class="article">
+  <p class="eyebrow">Platform engineering case study</p>
+  <h1 class="display-title">KUBERNETES<br><span>AND GITOPS</span></h1>
+  <div class="article__meta"><span class="tag">Kubernetes</span><span class="tag">AWS</span><span class="tag">Terraform</span><span class="tag">Argo CD</span><span class="tag">GitOps</span></div>
+  <nav class="case-nav" aria-label="Case studies"><a href="case-studies.html">Index</a><a href="case-study-kubernetes.html" aria-current="page">Kubernetes</a><a href="case-study-autonomous-agents.html">Agents</a><a href="case-study-discord-cli.html">Discord CLI</a></nav>
+  <p>This case study describes recurring patterns from enterprise platform engineering engagements: building and operating Kubernetes infrastructure on AWS, Terraform-managed provisioning, and Argo CD-based GitOps delivery for internal enterprise tooling. Client names, internal system names, and any business-specific logic have been removed or generalized. No metrics below are client-reported figures; where a number would normally appear, it is omitted rather than estimated. This is a composite, anonymized account of recurring patterns, not a specific named engagement.</p>
+<section class="article-section"><h2>Problem</h2>
+<p>Enterprise teams adopting Kubernetes commonly reach a point where the cluster itself is no longer the hard part. The infrastructure exists, but getting a change from a developer's laptop into production safely, repeatedly, and with a clear audit trail is not solved by <code>kubectl apply</code>. Manual deployments create drift between what is running and what is declared in source control, rollbacks depend on someone remembering the last-known-good configuration, and basic questions like "who changed this, and when" are hard to answer once enough services and teams share a cluster.</p>
+</section>
+<section class="article-section"><h2>Approach</h2>
+<p>The recurring approach across these engagements has been to treat Git as the single source of truth for both infrastructure and application state, and to let a GitOps controller reconcile the cluster to match it rather than pushing changes imperatively:</p>
+<ul>
+<li><strong>Infrastructure as code.</strong> Terraform provisions the Kubernetes cluster on AWS along with its supporting networking and IAM resources, so cluster-level changes go through the same review and plan/apply discipline as application code.</li>
+<li><strong>GitOps delivery.</strong> Argo CD watches Git repositories containing Helm charts and Kubernetes manifests and continuously reconciles the live cluster state to match them. A deployment is a merged commit, not a manual step, and the running state of the cluster is always diffable against Git.</li>
+<li><strong>Access control at the cluster layer.</strong> Namespace-scoped RBAC and Kubernetes-native access controls determine who can act on which workloads, so cluster access follows the same reviewable configuration model as everything else deployed through GitOps.</li>
+<li><strong>CI as a gate, not a bypass.</strong> CI pipelines build, test, and package changes into container images and chart versions, but do not deploy directly. Deployment authority stays with the GitOps controller reading from Git, which keeps the pipeline's job limited to producing a reviewable, versioned artifact.</li>
+</ul>
+</section>
+<section class="article-section"><h2>Architecture</h2>
+<pre class="architecture-code"><code>Developer PR --&gt; CI (build, test, package image + chart)
+                     |
+                     v
+              Merge to Git (source of truth)
+                     |
+                     v
+              Argo CD reconciliation loop
+                     |
+        +------------+-------------+
+        |                          |
+        v                          v
+  Kubernetes cluster (Terraform-  Helm-templated
+  provisioned on AWS: networking,   workloads,
+  IAM, node groups)                 ingress, RBAC
+        |                          |
+        v                          v
+  Namespace-scoped RBAC gates   Observability
+  cluster + Argo CD access      (metrics, logs)
+                                 feed rollout health</code></pre>
+</section>
+<section class="article-section"><h2>Deployment Safety and Tradeoffs</h2>
+<p>Because Argo CD continuously reconciles against Git, a manual <code>kubectl edit</code> against a live resource is corrected back to the Git-declared state on the next sync rather than silently persisting as drift. That property is valuable for auditability but has a real cost: it removes the option of a quick manual hotfix under pressure, and teams have to be deliberate about sync windows, health checks, and automated pruning so that a broken commit does not get reconciled into production before anyone notices. Rollback becomes a Git revert rather than a bespoke recovery procedure, which is simpler to reason about but only as reliable as the health checks gating promotion; a rollout that passes a shallow readiness probe but is functionally broken will still get promoted.</p>
+<p>Centralizing deployment authority in a GitOps controller also concentrates risk: the reconciliation loop's scope and permissions have to be deliberately bounded, since a controller with cluster-wide write access is a single point of failure for both good and bad changes. Observability has to cover the reconciliation process itself, not just the workloads it deploys, so that a stuck or misbehaving sync is visible before it is mistaken for a healthy, idle state.</p>
+</section>
+<section class="article-section"><h2>Outcome and Lessons</h2>
+<p>The consistent lesson across these engagements is that GitOps and infrastructure-as-code do not remove operational judgment, they relocate it. Instead of deciding whether a deployment looks safe at the moment of <code>kubectl apply</code>, the judgment goes into what the CI pipeline verifies before merge, what the readiness and liveness checks actually test, and how tightly the reconciliation loop's scope and permissions are bounded. Getting that judgment right, and documenting it so the next engineer does not have to rediscover it by reading Argo CD sync logs at 2 a.m., is the actual work behind "we use GitOps."</p>
+</section>
+  <div class="article-actions"><a class="button" href="case-studies.html">All case studies</a><a class="button button--secondary" href="case-study-autonomous-agents.html">Next: Agents</a></div>
+</article>
+</main>
+<footer class="site-footer">Copyright © 2026 Solomon Wakhungu. <a href="case-studies.html">Engineering case studies</a></footer>
+</body>
+</html>
