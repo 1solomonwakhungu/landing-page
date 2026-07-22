@@ -1,5 +1,6 @@
 (() => {
   const linkedInUrl = "https://www.linkedin.com/in/solomon-wakhungu-2712791bb/";
+  const caseStudiesHeroUrl = "https://solomonwakhungu.vercel.app/case-studies.html";
   const titles = {
     "/": "Solomon Wakhungu | Cloud Platform Engineer",
     "/index.html": "Solomon Wakhungu | Cloud Platform Engineer",
@@ -151,6 +152,12 @@
       || event.altKey
     ) return;
     const anchor = event.target.closest?.("a[href]");
+    if (caseStudiesHeroArrow(anchor)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.location.assign(caseStudiesHeroUrl);
+      return;
+    }
     const url = workingNavigationUrl(anchor?.getAttribute("href"));
     if (!url) return;
     event.preventDefault();
@@ -382,7 +389,7 @@
     document.querySelectorAll('[data-framer-name="Card"]').forEach((card) => {
       const anchor = card.querySelector('a[data-framer-name="Arrow Button"]');
       if (!caseStudiesHeroArrow(anchor)) return;
-      anchor.href = "case-studies.html";
+      anchor.setAttribute("href", caseStudiesHeroUrl);
       anchor.removeAttribute("target");
       anchor.removeAttribute("rel");
     });
