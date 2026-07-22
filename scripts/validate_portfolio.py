@@ -32,6 +32,11 @@ PAGES = [
     "case-study-discord-cli.html",
 ]
 ORIGINAL_PAGES = {"index.html", "experience.html", "projects.html", "tools.html"}
+NAVIGATION_ROUTES = {
+    "/experience": "experience.html",
+    "/projects": "projects.html",
+    "/tools": "tools.html",
+}
 REQUIRED_META = {
     "description",
     "author",
@@ -244,11 +249,17 @@ def validate() -> list[str]:
                 fail(errors, f"{page}: JSON-LD block {index} invalid: {exc}")
         if page in ORIGINAL_PAGES:
             sync_references = re.findall(r'portfolio-content-sync\.js(?:\?v=[^"<]+)?', source)
-            if sync_references != ["portfolio-content-sync.js?v=20260721-3"]:
+            if sync_references != ["portfolio-content-sync.js?v=20260721-4"]:
                 fail(errors, f"{page}: content sync script missing or duplicated")
             mobile_references = re.findall(r'portfolio-mobile-fixes\.css(?:\?v=[^"<]+)?', source)
             if mobile_references != ["portfolio-mobile-fixes.css?v=20260721-3"]:
                 fail(errors, f"{page}: mobile stylesheet missing or duplicated")
+            for broken_route, working_route in NAVIGATION_ROUTES.items():
+                if working_route not in parser.hrefs:
+                    fail(errors, f"{page}: missing working navigation route {working_route}")
+                broken_references = {broken_route, broken_route.lstrip("/"), f".{broken_route}"}
+                if broken_references & set(parser.hrefs):
+                    fail(errors, f"{page}: extensionless navigation route remains for {broken_route}")
         for reference in parser.hrefs + parser.sources:
             verify_internal_reference(page, reference, errors)
         for stale in STALE_COPY:
@@ -328,6 +339,19 @@ def validate() -> list[str]:
     for required in ["#contact", "scrollIntoView", ".framer-108jl35-container", "LinkedIn"]:
         if required not in runtime_sync:
             fail(errors, f"portfolio-content-sync.js: missing hydration safeguard {required}")
+    for broken_route, working_route in NAVIGATION_ROUTES.items():
+        route_mapping = f'["{broken_route}", "{working_route}"]'
+        if route_mapping not in runtime_sync:
+            fail(errors, f"portfolio-content-sync.js: missing navigation mapping {route_mapping}")
+    for required in [
+        'attributes: true',
+        'attributeFilter: ["href"]',
+        'document.addEventListener("click"',
+        "event.stopImmediatePropagation()",
+        "window.location.assign(url.href)",
+    ]:
+        if required not in runtime_sync:
+            fail(errors, f"portfolio-content-sync.js: missing href hydration safeguard {required}")
 
     javascript_files = [ROOT / "portfolio-content-sync.js", *ROOT.glob("sites/**/*.mjs")]
     for javascript in javascript_files:
