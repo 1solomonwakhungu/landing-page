@@ -10,6 +10,40 @@
   --line: #393536;
   --ink: #151312;
 }
+/* Motion tokens — transitions.dev scale (transitions-polish _root.css).
+   Referenced by usage: durations, easings, distances, scales, blur. */
+:root {
+  /* Durations */
+  --duration-stagger: 40ms;  /* per-item stagger offset */
+  --duration-micro: 80ms;  /* tooltip/path delay, shake segment, large stagger */
+  --duration-quick: 150ms;  /* modal/dropdown close, text swap, tooltip appear */
+  --duration-fast: 250ms;  /* icon swap, dropdown/modal open, tabs sliding, page slide */
+  --duration-medium: 350ms;  /* panel close, toast close */
+  --duration-slow: 400ms;  /* panel open, skeleton content reveal, input clear */
+  --duration-very-slow: 500ms;  /* emphasis moments, badge appear, text reveal, success check */
+  /* Easings */
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);  /* modal/dropdown/panel open + close, page slide, resize, position change */
+  --ease-in-out: ease-in-out;  /* icon swap, text swap, text reveal, skeleton reveal */
+  --ease-out: ease-out;  /* tooltip open / close */
+  --ease-linear: linear;  /* shimmer, skeleton pulse, spinner */
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);  /* badge pop open */
+  --ease-bounce-strong: cubic-bezier(0.34, 3.85, 0.64, 1);  /* bouncy hover-out (avatar return) */
+  /* Distances */
+  --distance-micro: 4px;  /* text swap */
+  --distance-small: 6px;  /* error shake (small segment) */
+  --distance-base: 8px;  /* badge diagonal reveal, page slide, error shake (large segment) */
+  --distance-medium: 12px;  /* text reveal */
+  --distance-large: 30px;  /* check badge appear */
+  /* Scales */
+  --scale-large: 0.96;  /* modal open / close */
+  --scale-medium: 0.97;  /* dropdown open */
+  --scale-small: 0.98;  /* tooltip open */
+  --scale-tiny: 0.99;  /* dropdown close */
+  /* Blur */
+  --blur-small: 2px;  /* panel reveal, icon swap, text swap, skeleton reveal, number pop-in */
+  --blur-medium: 3px;  /* page slide, text reveal */
+  --blur-large: 8px;  /* success check open */
+}
 * { box-sizing: border-box; }
 html, body { max-width: 100%; overflow-x: clip; }
 html { scroll-behavior: smooth; }
@@ -52,6 +86,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--lime); outline-
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+  transition: background-color var(--duration-quick) var(--ease-smooth-out);
 }
 .site-nav a:hover, .site-nav a[aria-current="page"] { background: #2b2827; }
 .page-shell {
@@ -86,7 +121,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--lime); outline-
 .profile-card h2 { position: relative; margin: 0 0 14px; font-size: 34px; line-height: 1.02; letter-spacing: -1.6px; }
 .profile-card p { margin: 0 auto; max-width: 290px; color: #6a6b6e; font-size: 16px; line-height: 1.22; font-weight: 500; }
 .profile-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-.profile-links a { display: inline-flex; align-items: center; color: #c2410c; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid #ffd0be; padding: 8px 10px; border-radius: 7px; white-space: nowrap; }
+.profile-links a { display: inline-flex; align-items: center; color: #c2410c; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid #ffd0be; padding: 8px 10px; border-radius: 7px; white-space: nowrap; transition: background-color var(--duration-quick) var(--ease-smooth-out); }
 .profile-links a:hover { background: #fff3ed; }
 .eyebrow { margin: 0 0 12px; color: var(--orange); font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 .display-title { min-width: 0; margin: 0 0 34px; font-size: clamp(52px, 7vw, 86px); line-height: .94; letter-spacing: -.055em; text-transform: uppercase; overflow-wrap: anywhere; }
@@ -104,7 +139,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--lime); outline-
   border-radius: 10px;
   background: var(--panel);
   text-decoration: none;
-  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  transition: transform var(--duration-quick) var(--ease-smooth-out), border-color var(--duration-quick) var(--ease-smooth-out), background var(--duration-quick) var(--ease-smooth-out);
 }
 .case-card:hover { transform: translateY(-2px); border-color: var(--orange); background: var(--panel-2); }
 .case-card__mark { display: grid; place-items: center; width: 112px; height: 109px; border-radius: 9px; background: #fff; color: #171414; font-size: 30px; font-weight: 800; letter-spacing: -.05em; }
@@ -112,7 +147,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--lime); outline-
 .case-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .case-card__arrow { color: var(--orange); font-size: 24px; }
 .proof-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
-.proof-card { min-height: 126px; padding: 20px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); text-decoration: none; }
+.proof-card { min-height: 126px; padding: 20px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); text-decoration: none; transition: border-color var(--duration-quick) var(--ease-smooth-out); }
 .proof-card:hover { border-color: var(--orange); }
 .proof-card strong { display: block; margin-bottom: 7px; font-size: 17px; }
 .proof-card span { color: var(--muted); font-size: 13px; line-height: 1.5; }
@@ -128,7 +163,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--lime); outline-
 .article__meta { display: flex; flex-wrap: wrap; gap: 8px; margin: -16px 0 32px; }
 .tag { border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; color: #bbb2b2; font-size: 12px; }
 .case-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: -12px 0 32px; }
-.case-nav a { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: #c9c0c0; font-size: 12px; text-decoration: none; white-space: nowrap; }
+.case-nav a { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: #c9c0c0; font-size: 12px; text-decoration: none; white-space: nowrap; transition: border-color var(--duration-quick) var(--ease-smooth-out), color var(--duration-quick) var(--ease-smooth-out); }
 .case-nav a:hover, .case-nav a[aria-current="page"] { border-color: var(--orange); color: var(--orange); }
 .article-section { padding: 28px 0; border-top: 1px solid var(--line); }
 .article-section h2 { margin: 0 0 14px; font-size: 30px; letter-spacing: -.03em; }
@@ -170,7 +205,12 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--lime); outline-
   .article-section p, .article-section li { font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  * { scroll-behavior: auto !important; transition: none !important; }
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 @media (pointer: coarse) {
   .button, .profile-links a, .case-nav a { min-height: 48px; align-items: center; }
