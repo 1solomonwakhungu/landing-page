@@ -10,7 +10,7 @@
   --line: #393536;
   --ink: #151312;
 }
-/* Motion tokens — transitions.dev scale (transitions-polish _root.css).
+/* Motion tokens: transitions.dev scale (transitions-polish _root.css).
    Referenced by usage: durations, easings, distances, scales, blur. */
 :root {
   /* Durations */

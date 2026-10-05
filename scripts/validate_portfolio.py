@@ -22,7 +22,7 @@ from project_catalog import PROJECTS
 ROOT = Path(__file__).resolve().parents[1]
 BASE_URL = "http://127.0.0.1:4173/"
 PRODUCTION_URL = "https://solomonwakhungu.vercel.app/"
-MOBILE_ASSET_VERSION = "20260721-5"
+MOBILE_ASSET_VERSION = "20260913-1"
 SYNC_ASSET_VERSION = "20260722-12"
 HOME_FRAMER_VERSION = "20260722-case-studies-absolute"
 HOME_FRAMER_MODULE = "DxnAd94XALAlOlb85GxH1KrtnPelwWOHJrojrJuQUqk.H5UZOHAH.mjs"

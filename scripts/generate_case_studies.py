@@ -18,7 +18,7 @@ SOURCE_ROOT = Path(
 )
 BASE_URL = "https://solomonwakhungu.vercel.app/"
 LINKEDIN_URL = "https://www.linkedin.com/in/solomon-wakhungu-2712791bb/"
-ASSET_VERSION = "20260721-3"
+ASSET_VERSION = "20260913-1"
 
 STUDIES = [
     {
