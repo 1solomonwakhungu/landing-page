@@ -1,0 +1,100 @@
+@import "tailwindcss";
+@import "../styles/tonal-tokens.css";
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--t-font);
+  background: var(--t-bg);
+  color: var(--t-ink);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 60;
+}
+
+.skip-link:focus {
+  left: 16px;
+  top: 12px;
+  border-radius: 9999px;
+  background: var(--t-cta-bg);
+  color: var(--t-cta-fg);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Editorial prose inside case study articles */
+.tonal-prose p {
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: var(--t-ink-secondary);
+}
+
+.tonal-prose p + p,
+.tonal-prose ul + p,
+.tonal-prose ol + p,
+.tonal-prose pre + p {
+  margin-top: 1rem;
+}
+
+.tonal-prose ul,
+.tonal-prose ol {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-left: 1.25rem;
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: var(--t-ink-secondary);
+}
+
+.tonal-prose ul {
+  list-style-type: disc;
+}
+
+.tonal-prose ol {
+  list-style-type: decimal;
+}
+
+.tonal-prose strong {
+  font-weight: 500;
+  color: var(--t-ink);
+}
+
+.tonal-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--t-surface-muted);
+  color: var(--t-ink);
+  padding: 0.14rem 0.42rem;
+  border-radius: 6px;
+}
+
+.tonal-prose pre {
+  margin-top: 1.25rem;
+  overflow-x: auto;
+  border-radius: 18px;
+  background: var(--t-surface);
+  border: 1px solid var(--t-border-subtle);
+  padding: 1.25rem 1.5rem;
+}
+
+.tonal-prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t-ink);
+}

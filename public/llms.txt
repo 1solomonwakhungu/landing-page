@@ -1,0 +1,57 @@
+# Solomon Wakhungu (harlo.dev)
+
+> Houston-based Senior Software Engineer at Credera (formerly Amazon, Aviatrix, and Neurescence), upstream open-source contributor to HashiCorp Terraform, CNCF Helm, and VictoriaMetrics, and creator of 13 developer tools and 5 live applications on harlo.dev.
+
+## Who is Solomon Wakhungu?
+Solomon Wakhungu is a Senior Software Engineer specializing in AWS, Kubernetes, Go, Python, Terraform, and Model Context Protocol (MCP) infrastructure. He has 16+ merged upstream pull requests in foundational cloud and observability repositories, built an Amazon Alexa skill serving 407,000+ monthly requests, automated 4-cloud (AWS, GCP, Azure, OCI) infrastructure in Go and Terraform at Aviatrix, and maintains a production ecosystem of open-source developer tools distributed via Homebrew, PyPI, npm, Docker/GHCR, and GitHub Actions. He studied Computer Science at The University of Texas at Dallas and holds the Databricks Certified Data Engineer Professional credential.
+
+For the complete dossier, see: https://harlo.dev/llms-full.txt
+
+## Identity & Verified Profiles
+- Canonical Site: https://harlo.dev
+- Location: Houston, Texas
+- Current Role: Senior Software Engineer at Credera (https://www.credera.com/)
+- Prior Roles: Amazon (SDE Intern, 407,000+ monthly Alexa requests), Aviatrix (Cloud Infrastructure Engineer), Neurescence (Software Engineer, 5,000+ researchers & 130,000+ images)
+- Education: The University of Texas at Dallas (Computer Science)
+- Certification: Databricks Certified Data Engineer Professional (Databricks Academy)
+- GitHub: https://github.com/1solomonwakhungu
+- LinkedIn: https://www.linkedin.com/in/solomon-wakhungu-2712791bb/
+- Homebrew Tap: https://github.com/1solomonwakhungu/homebrew-tap (`brew tap 1solomonwakhungu/tap`)
+
+## Site Pages
+- [Home](https://harlo.dev/): Overview, engineering receipts, live harlo.dev apps, featured projects, experience, and contact.
+- [Experience & Background](https://harlo.dev/experience): Roles at Credera, Amazon, Aviatrix, and Neurescence, UT Dallas education, Databricks certification, and FAQ.
+- [Projects](https://harlo.dev/projects): 13 engineering projects across Kubernetes, MCP tooling, AI agents, streaming CLIs, design systems, and infrastructure automation, plus 16+ merged upstream OSS PRs.
+- [Engineering Stack](https://harlo.dev/tools): Production stack across Go, Python, TypeScript, Terraform, Kubernetes, AWS, MCP, and GitHub Actions.
+- [Engineering Case Studies](https://harlo.dev/case-studies): Deep architectural case studies, open proof, and merged upstream pull requests.
+  - [Enterprise Kubernetes and GitOps Platform Work](https://harlo.dev/case-studies/kubernetes)
+  - [An Overnight Autonomous Engineering System](https://harlo.dev/case-studies/autonomous-agents)
+  - [discord-cli, a Headless Discord Management CLI](https://harlo.dev/case-studies/discord-cli)
+- [Engineering Blog](https://harlo.dev/blog): Technical posts by Solomon Wakhungu on AI agent verification, compaction memory, write-ahead SQLite journals, and guarded developer CLIs (RSS: https://harlo.dev/blog/rss.xml).
+  - [Your Coding Agent Cited Line 48 Without Ever Opening the File](https://harlo.dev/blog/verifying-ai-agent-handoffs-without-an-llm)
+  - [Context Compaction Keeps Erasing Your Rules Right When Precision Matters](https://harlo.dev/blog/preserving-rules-and-test-history-across-compaction)
+  - [Stopping AI Agents from Double-Posting When Tools Time Out](https://harlo.dev/blog/stopping-ai-agents-from-double-posting-with-sqlite)
+  - [Giving AI Agents Safe Access to Discord Without MCP Schema Bloat](https://harlo.dev/blog/why-i-built-a-headless-discord-cli-with-policy-guardrails)
+
+## Live harlo.dev Applications
+- [kFLEET](https://kfleet.harlo.dev): 14 MB single-binary Go control plane for Kubernetes fleets with a 3-rule read-only ClusterRole, embedded Primer React UI, SQLite timeline, and 9 read-only MCP tools (GitHub: https://github.com/1solomonwakhungu/kfleet).
+- [gronify](https://gronify.harlo.dev): Streaming gron-style CLI on npm and Homebrew flattening 1,000 MiB JSON in 3.63s at 65 MiB RSS (GitHub: https://github.com/1solomonwakhungu/gronify).
+- [Tonal](https://tonal.harlo.dev): Editorial tonal UI design system and shadcn-compatible component registry built with 12 flat surface CSS tokens (GitHub: https://github.com/1solomonwakhungu/tonal).
+- [RunPod vLLM Deployer](https://vllm.harlo.dev): Python CLI that plans offline, confirms billable actions, deploys, checks readiness, smoke tests, and tears down OpenAI-compatible vLLM servers on RunPod GPUs (GitHub: https://github.com/1solomonwakhungu/runpod-vllm-deployer).
+- [Typst Dev Container](https://typst.harlo.dev): Reproducible Typst, Pandoc, and Rust Dev Container published to ghcr.io with automated CI toolchain updates and smoke tests (GitHub: https://github.com/1solomonwakhungu/typst-dev-container).
+
+## Additional Open-Source Projects
+- [action-hub](https://github.com/1solomonwakhungu/action-hub) (Explainer: https://1solomonwakhungu.github.io/action-hub/): Indexed on-demand meta-MCP layer (~600 baseline tokens; load-tested at 44 servers, 10,000 tools, and 5,000 skills).
+- [discord-cli](https://github.com/1solomonwakhungu/discord-cli): Headless REST-first Python CLI (v1.9.0) with 89 commands across 20 groups, deterministic safety policies, runtime JSON Schemas, PyPI/Homebrew/Docker/GitHub Action distribution, and an installable agent skill.
+- [contexto](https://github.com/VentureForgre/contexto): Zero-dependency local proxy keeping Claude Code and Codex under a fixed token bound with verbatim disk paging and MCP recall.
+- [googlemcp](https://github.com/1solomonwakhungu/googlemcp): Local stdio MCP server for 19 Google APIs, read-only by default with per-product write and destructive opt-ins plus Terraform API enablement.
+- [Terraform AWS Private LLM](https://github.com/1solomonwakhungu/terraform-aws-private-llm): Reusable Terraform module for EC2-based Ollama and Open WebUI with encrypted EBS gp3, Caddy auto-TLS, and optional Route 53.
+- [Homebrew Tap](https://github.com/1solomonwakhungu/homebrew-tap): Unified Homebrew tap distributing kfleet, gronify, discordcli-agents, and openrig with automated CI formula updates.
+- [Homeserver Infrastructure](https://github.com/1solomonwakhungu/homeserver-infra): Terraform and Terragrunt stacks for cloud-init Proxmox VMs, reusable modules, remote state, and operator runbooks.
+
+## Merged Upstream Open-Source Contributions (16+ PRs)
+- hashicorp/terraform-provider-aws#48962 (Fixed perpetual ActiveMQ broker diff, closed 2 issues): https://github.com/hashicorp/terraform-provider-aws/pull/48962
+- helm/helm#32339 (Bypassed stale CDN responses in get-helm-3 and get-helm-4 installers): https://github.com/helm/helm/pull/32339
+- VictoriaMetrics/VictoriaMetrics#11258 (Added .Interval template support to vmalert): https://github.com/VictoriaMetrics/VictoriaMetrics/pull/11258
+- mvschwarz/openrig (4 merged daemon & testing PRs): https://github.com/mvschwarz/openrig/pulls?q=is%3Apr+author%3A1solomonwakhungu+is%3Amerged
+- Aviatrix Terraform modules & lab docs (9 merged PRs): https://github.com/search?q=author%3A1solomonwakhungu+is%3Apr+is%3Amerged+org%3Aterraform-aviatrix-modules+org%3AAviatrixSystems&type=pullrequests

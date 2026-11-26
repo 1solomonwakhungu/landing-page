@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Solomon Wakhungu · harlo.dev</title>
+  <desc id="desc">Solomon Relay monogram: rotationally symmetric dual-arc S in charcoal ink and calm blue</desc>
+  <style>
+    .bg { fill: #f0f4f9; }
+    .ink { stroke: #202124; }
+    .accent { stroke: #1967d2; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #1b2230; }
+      .ink { stroke: #e3e3e3; }
+      .accent { stroke: #8ab4f8; }
+    }
+  </style>
+  <rect class="bg" width="64" height="64" rx="18"/>
+  <path class="ink" d="M43 18.5 H25.5 A6.75 6.75 0 0 0 25.5 32 H26.2" stroke-width="8.5" stroke-linecap="round"/>
+  <path class="accent" d="M21 45.5 H38.5 A6.75 6.75 0 0 0 38.5 32 H37.8" stroke-width="8.5" stroke-linecap="round"/>
+</svg>

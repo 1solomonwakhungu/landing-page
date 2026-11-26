@@ -1,0 +1,77 @@
+name: Submit to IndexNow
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Vercel deployment
+        if: github.event_name == 'push'
+        run: sleep 75
+
+      - name: Submit all sitemaps in sitemap-index.xml to IndexNow
+        env:
+          SITEMAP_INDEX_URL: https://harlo.dev/sitemap-index.xml
+          INDEXNOW_KEY: fcf9ec5a77e9058c6aeb871432ab03e8
+        run: |
+          node --input-type=module -e '
+            const indexUrl = process.env.SITEMAP_INDEX_URL;
+            const key = process.env.INDEXNOW_KEY;
+
+            const idxRes = await fetch(indexUrl);
+            if (!idxRes.ok) throw new Error(`Failed to fetch ${indexUrl}: HTTP ${idxRes.status}`);
+            const idxXml = await idxRes.text();
+            const sitemapUrls = [...idxXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1]);
+            if (sitemapUrls.length === 0) throw new Error(`No sitemaps found in ${indexUrl}`);
+
+            let submitted = 0;
+            let failures = 0;
+
+            for (const sitemapUrl of sitemapUrls) {
+              const host = new URL(sitemapUrl).host;
+              const keyLocation = `https://${host}/${key}.txt`;
+
+              try {
+                const keyRes = await fetch(keyLocation);
+                const keyBody = (await keyRes.text()).trim();
+                if (!keyRes.ok || keyBody !== key) {
+                  console.log(`::warning::Skipping ${host} - key file not live at ${keyLocation} (HTTP ${keyRes.status})`);
+                  continue;
+                }
+
+                const smRes = await fetch(sitemapUrl);
+                if (!smRes.ok) throw new Error(`sitemap HTTP ${smRes.status}`);
+                const smXml = await smRes.text();
+                const urlList = [...smXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1]);
+                if (urlList.length === 0) {
+                  console.log(`::warning::Skipping ${host} - no URLs in ${sitemapUrl}`);
+                  continue;
+                }
+
+                const res = await fetch("https://api.indexnow.org/indexnow", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json; charset=utf-8" },
+                  body: JSON.stringify({ host, key, keyLocation, urlList }),
+                });
+                if (!res.ok) throw new Error(`IndexNow HTTP ${res.status}: ${await res.text()}`);
+                console.log(`✓ ${host}: HTTP ${res.status} (${urlList.length} URL(s))`);
+                submitted++;
+              } catch (err) {
+                console.error(`✗ ${host}: ${err.message}`);
+                failures++;
+              }
+            }
+
+            if (failures > 0 || submitted === 0) {
+              throw new Error(`IndexNow completed with ${submitted} succeeded, ${failures} failed`);
+            }
+          '
